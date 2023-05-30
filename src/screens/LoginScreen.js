@@ -1,174 +1,106 @@
-import {
-  Dimensions,
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-} from "react-native";
-import React,{useContext, useState} from "react";
+import {Alert, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from "react-native";
+import React, {useState} from "react";
 
 import CustomButton from '../components/CustomButton';
-import InputField from '../components/InputField';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import LoginSVG from '../assets/images/misc/login.svg';
-import { AuthContext } from "../context/AuthContext";
-import { isValidEmail, isValidObjField, updateError } from '../utils/methods';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {TextInput} from 'react-native-paper';
 import Login from '../assets/images/misc/picsvg.svg';
-import { Formik } from 'formik';
 
-import client from '../api/client'
+const LoginForm = ({navigation}) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-const LoginScreen = ({navigation}) => {
-  
-  const [userInfo, setUserInfo] = useState({
-    email: '',
-    password: '',
-  });
+    const login = () => {
+        fetch('http://192.168.137.51:3000/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email, password}),
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error: ' + response.status);
+                }
+            })
+            .then(data => {
+                Alert.alert('Logged in!', 'Welcome back!');
+                //kammel traitement hna
 
-  const [error, setError] = useState('');
+            })
+            .catch(error => Alert.alert('Error', 'An error occurred: ' + error.message));
+    };
 
-  const { email, password } = userInfo;
+    return (
+        <SafeAreaView style={{flex: 1, justifyContent: 'center'}}>
+            <ScrollView>
+                <View style={{alignItems: 'center'}}>
+                    <Login
+                        height={300}
+                        width={900}
+                        style={{transform: [{scale: 1.5}]}}
+                    />
+                </View>
+                <Text
+                    style={{
+                        fontFamily: 'Roboto',
+                        fontSize: 28,
+                        fontWeight: '500',
+                        color: '#333',
+                        marginBottom: 30,
+                        textAlign: 'center',
+                    }}>
+                    Login
+                </Text>
 
-  const handleOnChangeText = (value, fieldName) => {
-    setUserInfo({ ...userInfo, [fieldName]: value });
-  };
-
-  const isValidForm = () => {
-    if (!isValidObjField(userInfo))
-      return updateError('Required all fields!', setError);
-
-    if (!isValidEmail(email)) return updateError('Invalid email!', setError);
-
-    if (!password.trim() || password.length < 3)
-      return updateError('Password is too short!', setError);
-
-    return true;
-  };
-
-  const submitForm = async () => {
-    if (isValidForm()) {
-      
-      try {
-        const res = await client.post('/sign-in', { ... userInfo });
-     
-        console.log('running');
-
-       console.log(res.data);
-     } catch (error) {
-        console.log(error.message);
-      }
-    }
-  };
-
-          
-    
-
-
-   return (
-
-    <SafeAreaView style={{flex: 1, justifyContent: 'center'}}>
-         <ScrollView>
-      
-         <View style={{alignItems: 'center'}}>
-        <Login
-            height={300}
-            width={900}
-            
-           // style={{transform: [{rotate: '1deg'}]}
-           style={{transform:[{scale:1.5}]}}
-          
-          />
-        </View>
-     
-          <Text
-        style={{
-          fontFamily: 'Roboto-Medium',
-          fontSize: 28,
-          fontWeight: '500',
-          color: '#333',
-          marginBottom: 30,
-        }}>
-        Login
-      </Text>
-      
-
-      <InputField
-        label='Email ID'
-       value={email}
-      // onChangeText={il)}
-      onChangeText={value => handleOnChangeText(value, 'email')}
-        icon={
-          <MaterialIcons
-          name="alternate-email"
-          size={20}
-          color="#666"
-          style={{marginRight: 5}}
-        />
-        }
-        keyboardType="email-address"
-       
-      />
+                <TextInput
+                    label="Email"
+                    value={email}
+                    onChangeText={text => setEmail(text)}
+                    mode="outlined"
+                    style={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                    }}
+                />
 
 
-       
+                <TextInput
+                    label="Password"
+                    value={password}
+                    onChangeText={text => setPassword(text)}
+                    secureTextEntry
+                    mode="outlined"
+                    style={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                        marginBottom: 25,
+                    }}
+                />
 
-<InputField
-        label='password'
-        value={password}
-        onChangeText={value => handleOnChangeText(value, 'password')}
-       
-     
-        icon={
-          <Ionicons
-          name="ios-lock-closed-outline"
-          size={20}
-          color="#666"
-          style={{marginRight: 5}}
-        />
-        }
-        inputType="password"
-        
-        fieldButtonLabel={"Forgot?"}
-        fieldButtonFunction={() => {navigation.navigate('Forgot')}}
-      />
-       
-       <CustomButton label={"Login"} onPress={submitForm} />
-     
-       <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'center',
-          marginBottom: 30,
-        }}>
-        <Text>New to the app?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={{color: '#AD40AF', fontWeight: '700'}}> Register</Text>
-        </TouchableOpacity>
-      </View>
-      
-      </ScrollView>
-      
-    </SafeAreaView>
-    
-   
-    
-  );
-  
+                <CustomButton label="Login" onPress={login}
+                              style={{
+                                  marginLeft: 5,
+                                  marginRight: 5,
+                                  marginBottom: 15,
+                              }}/>
+
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        marginBottom: 30,
+                    }}>
+                    <Text>New to the app?</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <Text style={{color: '#AD40AF', fontWeight: '700'}}> Register</Text>
+                    </TouchableOpacity>
+                </View>
+
+            </ScrollView>
+
+        </SafeAreaView>
+    );
 };
 
+export default LoginForm;
 
-export default LoginScreen;
-
-const styles = StyleSheet.create({
-  message: {
-    fontSize: 16,
-    marginVertical: '5%',
-},
-});
